@@ -19,10 +19,11 @@ namespace Boardgame
         private Square[,] squares;
         private Context context;
 
-        // aaa
-        Boardgame(Context context): base(context)
+        BoardGame(Context context): base(context)
         {
-            
+            this.context = context;
+            this.squares = new Square[6, 6];
+            this.coin = new Coin(this, 0, 0, 0, 0, 10);
         }
     }
 }

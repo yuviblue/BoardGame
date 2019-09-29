@@ -15,12 +15,12 @@ namespace Boardgame
 {
     class Coin
     {
-        private Boardgame board;
+        private BoardGame board;
         private float x, y, r; // circle coordinates and radius
         private float lastX, lastY; // previous coordinates
         private Paint p; // circle styling
 
-        public Coin(float x, float y, float r, float lastX, float lastY, Color color)
+        public Coin(BoardGame board, float x, float y, float r, float lastX, float lastY)
         {
             this.x = x;
             this.y = y;
@@ -28,7 +28,8 @@ namespace Boardgame
             this.lastX = lastX;
             this.lastY = lastY;
             this.p = new Paint();
-            p.Color = color;
+            this.board = board;
+            p.Color = Color.Aqua;
         }
 
         public void Draw(Canvas canvas)
