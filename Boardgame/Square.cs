@@ -16,7 +16,7 @@ namespace Boardgame
     class Square
     {
         private float x, y, w, h; // top left, bottom right, width, height;
-        private Color color; // tile color
+        //private Color color; // tile color
         private Paint p; // style brush
         private BoardGame board; // not yet built
 
@@ -28,12 +28,13 @@ namespace Boardgame
             this.h = h;
             this.board = board;
             this.p = new Paint();
-            this.color = color;
+            p.Color = color;
+            //this.color = color;
         }
 
         public void Draw(Canvas canvas)
         {
-            canvas.DrawRect(x, y, w, h, p);
+            canvas.DrawRect(x, y, x + w, y + h, p);
         }
         
         public bool IsXAndYInSquare(float otherX, float otherY)

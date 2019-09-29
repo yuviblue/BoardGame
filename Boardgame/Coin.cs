@@ -39,7 +39,22 @@ namespace Boardgame
 
         public bool DidUserTouchMe(float otherX, float otherY)
         {
-            return ((otherX < r + x && otherX > r - x) && (otherY < r + y && otherY > r - y));
+            return DistanceFromCenter(otherX, otherY) <= r;
+        }
+
+        private float DistanceFromCenter(float otherX, float otherY)
+        {
+            return (float)Math.Sqrt( Math.Pow((otherX - x), 2) + Math.Pow((otherY - y), 2));
+        }
+
+        public void SetX(float x)
+        {
+            this.x = x;
+        }
+
+        public void SetY(float y)
+        {
+            this.y = y;
         }
     }
 }
