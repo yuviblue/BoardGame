@@ -24,7 +24,7 @@ namespace Boardgame
         {
             this.context = context;
             this.squares = new Square[6, 6];
-            this.coin = new Coin(this, 0, 0, 0, 0, 10);
+            this.coin = new Coin(this, 0, 0, 80, 0, 10);
         }
 
         public void DrawBoard(Canvas canvas)
