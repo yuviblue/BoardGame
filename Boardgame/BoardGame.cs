@@ -19,6 +19,8 @@ namespace Boardgame
         private Coin coin;
         private Square[,] squares;
         private Context context;
+        private Point lastPosition;
+        private bool dragging;
 
         public BoardGame(Context context): base(context)
         {
@@ -93,20 +95,41 @@ namespace Boardgame
 
         public override bool OnTouchEvent(MotionEvent evn)
         {
-            if (evn.Action == MotionEventActions.Move)
+            if (evn.Action == MotionEventActions.Down && coin.DidUserTouchMe(evn.GetX(), evn.GetY()))
             {
-                if(coin.DidUserTouchMe(evn.GetX(), evn.GetY()))
-                {
-                    coin.SetX(evn.GetX());
-                    coin.SetY(evn.GetY());
-                    Invalidate();
-                }  
+                lastPosition = coin.GetCoinSquare();
+                dragging = true;
             }
-            else if (evn.Action == MotionEventActions.Up)
+            else if (evn.Action == MotionEventActions.Move && dragging)
             {
                 coin.SetX(evn.GetX());
                 coin.SetY(evn.GetY());
                 Invalidate();
+            }
+            else if (evn.Action == MotionEventActions.Up )
+            {
+                if (dragging)
+                {
+                    if (!coin.IsSquareBlack())
+                    {
+                        coin.SetX(lastPosition.X * 180 + 90);
+                        coin.SetY(lastPosition.Y * 180 + 90);
+                        Invalidate();
+                    }
+                }
+                else if (Coin.IsSquareBlack((int)evn.GetX(), (int)evn.GetY()))
+                {
+                    coin.SetX(evn.GetX());
+                    coin.SetY(evn.GetY());
+                    Invalidate();
+                } 
+
+                var p = coin.GetCoinSquare();
+                coin.SetX(p.X * 180 + 90);
+                coin.SetY(p.Y * 180 + 90);
+                Invalidate();
+
+                dragging = false;
             }
             return true;
         }

@@ -56,5 +56,33 @@ namespace Boardgame
         {
             this.y = y;
         }
+
+        public Point GetCoinSquare()
+        {
+            return GetSquare((int)x, (int)y);
+        }
+
+        public static Point GetSquare(int x, int y)
+        {
+            var p = new Point();
+            p.X = x / 180;
+            p.Y = y / 180;
+            return p;
+        }
+
+        public bool IsSquareBlack()
+        {
+            return IsSquareBlack((int)x, (int)y);
+        }
+
+        public static bool IsSquareBlack(int x, int y)
+        {
+            var p = GetSquare(x, y);
+            if ((p.X + p.Y) % 2 == 0)
+            {
+                return false;
+            }
+            return true;
+        }
     }
 }
