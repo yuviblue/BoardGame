@@ -13,11 +13,25 @@ namespace Boardgame
         private Square[,] squares;
         private Context context;
         private Timer timer;
+        private int score;
+
+        public int Lives { get ; set;}
+
+        enum GameState
+        {
+            Playing,
+            GameOver,
+            PressAnyKey
+        };
+
+        private GameState gameState = GameState.Playing;
 
         public BoardGame(Context context): base(context)
         {
             this.context = context;
             squares = new Square[6, 6];
+            score = 0;
+            Lives = 3;
             SetTimer(); 
         }
 
@@ -34,13 +48,13 @@ namespace Boardgame
         public void OnTimedEvent(object source, ElapsedEventArgs e)
         {
             Random random = new Random();
-            int ix = random.Next(0, 5);
-            int iy = random.Next(0, 5);
+            int ix = random.Next(0, 6);
+            int iy = random.Next(0, 6);
 
             while(IsPositionTaken(ix, iy))
             {
-                ix = random.Next(0, 5);
-                iy = random.Next(0, 5);
+                ix = random.Next(0, 6);
+                iy = random.Next(0, 6);
             }
             var coin = new Coin(this, ix * 180 + 90, iy * 180 + 90);
             lock (coins)
@@ -132,28 +146,93 @@ namespace Boardgame
             base.OnDraw(canvas);
             DrawBoard(canvas);
             DrawCoins(canvas);
+            DrawText(canvas);
+        }
+
+        private void DrawText(Canvas canvas)
+        {
+            canvas.DrawText("Score: " + score, 10, 1200, new Paint() { Color = Color.Black, TextSize = 100});
+            canvas.DrawText("Lives: " + Lives, 10, 1350, new Paint() { Color = Color.Black, TextSize = 100 });
+
+            if (gameState != GameState.Playing)
+            {
+                canvas.DrawText("*** Game Over ***", 10, 1530, new Paint() { Color = Color.Black, TextSize = 130 });
+
+                if (gameState == GameState.GameOver)
+                {
+                    Timer t = new Timer(3000);
+                    t.Elapsed += OnFreezeEnd;
+                    t.AutoReset = false;
+                    t.Enabled = true;
+                }
+                else if(gameState == GameState.PressAnyKey)
+                {
+                    canvas.DrawText("Touch screen to start over", 10, 1680, new Paint() { Color = Color.Black, TextSize = 80 });
+                }
+            }
+        }
+
+        public void OnFreezeEnd(object source, ElapsedEventArgs e)
+        {
+            gameState = GameState.PressAnyKey;
+            Invalidate();
         }
 
         public override bool OnTouchEvent(MotionEvent evn)
         {
-            foreach(var c in coins.ToArray())
+             if (gameState == GameState.PressAnyKey)
             {
-                if(c.OnTouchEvent(evn.GetX(), evn.GetY()))
+                NewGame();
+            }
+            else if(gameState == GameState.Playing)
+            {
+                foreach (var c in coins.ToArray())
                 {
-                    Refresh(c);
-                    break;
+                    if (c.OnTouchEvent(evn.GetX(), evn.GetY()))
+                    {
+                        DeleteCoin(c);
+                        score++;
+                        break;
+                    }
                 }
             }
             return true;
         }
 
-        public void Refresh(Coin coin)
+        public void DeleteCoin(Coin coin)
         {
             lock (coins)
             {
                 coins.Remove(coin);
+                coin.Dispose();
+                HandleGameOver();
             }
+            
             Invalidate();
+        }
+
+        private void HandleGameOver()
+        {
+            if (Lives == 0)
+            {
+                timer.Stop();
+                timer.Close();
+                gameState = GameState.GameOver;
+            }
+        }
+
+        private void NewGame()
+        {
+            foreach (var c in coins)
+            {
+                c.Dispose();
+            }
+
+            coins.Clear();
+            SetTimer();
+            gameState = GameState.Playing;
+            Lives = 3;
+            score = 0;
         }
 
     }

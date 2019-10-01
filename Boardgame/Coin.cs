@@ -4,7 +4,7 @@ using Android.Graphics;
 
 namespace Boardgame
 {
-    class Coin
+    class Coin : IDisposable
     {
         private BoardGame board;
         private Paint p; // circle styling
@@ -99,7 +99,21 @@ namespace Boardgame
 
         public void OnTimedEvent(object source, ElapsedEventArgs e)
         {
-            board.Refresh(this);
+            lock (board)
+            {
+                if (board.Lives == 0)
+                    return;
+            }
+
+            board.Lives--;
+            board.DeleteCoin(this);
         }
+
+        public void Dispose()
+        {
+            t.Stop();
+            t.Close();
+        }
+
     }
 }
