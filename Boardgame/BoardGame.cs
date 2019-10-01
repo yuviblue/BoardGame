@@ -192,6 +192,7 @@ namespace Boardgame
                     {
                         DeleteCoin(c);
                         score++;
+                        timer.Interval -= 5;
                         break;
                     }
                 }
