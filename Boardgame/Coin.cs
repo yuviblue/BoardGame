@@ -1,65 +1,67 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using Android.App;
-using Android.Content;
+using System.Timers;
 using Android.Graphics;
-using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
 
 namespace Boardgame
 {
     class Coin
     {
         private BoardGame board;
-        private float x, y, r; // circle coordinates and radius
-        private float lastX, lastY; // previous coordinates
         private Paint p; // circle styling
+        private Timer t;
 
-        public Coin(BoardGame board, float x, float y, float r, float lastX, float lastY)
+        public float PX { get; set; }
+        public float PY { get; set; }
+        public float R { get; set; }
+
+        public Coin(BoardGame board, float x, float y)
         {
-            this.x = x;
-            this.y = y;
-            this.r = r;
-            this.lastX = lastX;
-            this.lastY = lastY;
-            this.p = new Paint();
+            PX = x;
+            PY = y;
+            R = 80;
+            p = new Paint();
             this.board = board;
-            p.Color = Color.Aqua;
+            p.Color = Color.Gold;
+            SetTimer();
         }
 
+        public bool OnTouchEvent(float otherX, float otherY)
+        {
+            if(!DidUserTouchMe(otherX, otherY))
+            {
+                return false;
+            }
+
+            t.Stop();
+            return true;
+        }
         public void Draw(Canvas canvas)
         {
-            canvas.DrawCircle(this.x, this.y, this.r, this.p);
+            canvas.DrawCircle(this.PX, this.PY, this.R, this.p);
         }
-
         public bool DidUserTouchMe(float otherX, float otherY)
         {
-            return DistanceFromCenter(otherX, otherY) <= r;
+            return DistanceFromCenter(otherX, otherY) <= R;
         }
 
         private float DistanceFromCenter(float otherX, float otherY)
         {
-            return (float)Math.Sqrt( Math.Pow((otherX - x), 2) + Math.Pow((otherY - y), 2));
+            return (float)Math.Sqrt( Math.Pow((otherX - PX), 2) + Math.Pow((otherY - PY), 2));
         }
 
         public void SetX(float x)
         {
-            this.x = x;
+            this.PX = x;
         }
 
         public void SetY(float y)
         {
-            this.y = y;
+            this.PY = y;
         }
 
         public Point GetCoinSquare()
         {
-            return GetSquare((int)x, (int)y);
+            return GetSquare((int)PX, (int)PY);
         }
 
         public static Point GetSquare(int x, int y)
@@ -72,7 +74,7 @@ namespace Boardgame
 
         public bool IsSquareBlack()
         {
-            return IsSquareBlack((int)x, (int)y);
+            return IsSquareBlack((int)PX, (int)PY);
         }
 
         public static bool IsSquareBlack(int x, int y)
@@ -83,6 +85,21 @@ namespace Boardgame
                 return false;
             }
             return true;
+        }
+
+        public void SetTimer()
+        {
+            // Create a timer with a two second interval.
+            t = new Timer(2000);
+            // Hook up the Elapsed event for the timer. 
+            t.Elapsed += OnTimedEvent;
+            t.AutoReset = false;
+            t.Enabled = true;
+        }
+
+        public void OnTimedEvent(object source, ElapsedEventArgs e)
+        {
+            board.Refresh(this);
         }
     }
 }

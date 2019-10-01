@@ -1,32 +1,73 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using Android.App;
+using System.Timers;
 using Android.Content;
 using Android.Graphics;
-using Android.OS;
-using Android.Runtime;
 using Android.Views;
-using Android.Widget;
 
 namespace Boardgame
 {
     class BoardGame: View
     {
-        private bool isCoinExist; 
-        private Coin coin;
+        private List<Coin> coins = new List<Coin>();
         private Square[,] squares;
         private Context context;
-        private Point lastPosition;
-        private bool dragging;
+        private Timer timer;
 
         public BoardGame(Context context): base(context)
         {
             this.context = context;
-            this.squares = new Square[6, 6];
-            this.coin = new Coin(this, 0, 0, 80, 0, 10);
+            squares = new Square[6, 6];
+            SetTimer(); 
+        }
+
+        public void SetTimer()
+        {
+            // Create a timer with a two second interval.
+            timer = new Timer(500);
+            // Hook up the Elapsed event for the timer. 
+            timer.Elapsed += OnTimedEvent;
+            timer.AutoReset = true;
+            timer.Enabled = true;
+        }
+
+        public void OnTimedEvent(object source, ElapsedEventArgs e)
+        {
+            Random random = new Random();
+            int ix = random.Next(0, 5);
+            int iy = random.Next(0, 5);
+
+            while(IsPositionTaken(ix, iy))
+            {
+                ix = random.Next(0, 5);
+                iy = random.Next(0, 5);
+            }
+            var coin = new Coin(this, ix * 180 + 90, iy * 180 + 90);
+            lock (coins)
+            {
+                coins.Add(coin);
+            }
+            Invalidate();
+            
+        }
+
+        public bool IsPositionTaken(int ix, int iy)
+        {
+            lock (coins)
+            {
+                foreach (var c in coins)
+                {
+                    int ixCoin = (int)c.PX / 180;
+                    int iyCoin = (int)c.PY / 180;
+
+                    if (ix == ixCoin && iy == iyCoin)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         public void DrawBoard(Canvas canvas)
@@ -73,65 +114,47 @@ namespace Boardgame
             }
         }
 
-        public void DrawCoin(Canvas canvas)
+        
+
+        public void DrawCoins(Canvas canvas)
         {
-            if (!isCoinExist)
+            lock (coins)
             {
-                float w = canvas.Width / 6;
-                float h = canvas.Width / 6;
-                coin.SetX(w / 2);
-                coin.SetY(h / 2);
-                isCoinExist = true;
+                foreach (var c in coins)
+                {
+                    c.Draw(canvas);
+                }
             }
-            coin.Draw(canvas);
         }
 
         protected override void OnDraw(Canvas canvas)
         {
             base.OnDraw(canvas);
             DrawBoard(canvas);
-            DrawCoin(canvas);
+            DrawCoins(canvas);
         }
 
         public override bool OnTouchEvent(MotionEvent evn)
         {
-            if (evn.Action == MotionEventActions.Down && coin.DidUserTouchMe(evn.GetX(), evn.GetY()))
+            foreach(var c in coins.ToArray())
             {
-                lastPosition = coin.GetCoinSquare();
-                dragging = true;
-            }
-            else if (evn.Action == MotionEventActions.Move && dragging)
-            {
-                coin.SetX(evn.GetX());
-                coin.SetY(evn.GetY());
-                Invalidate();
-            }
-            else if (evn.Action == MotionEventActions.Up )
-            {
-                if (dragging)
+                if(c.OnTouchEvent(evn.GetX(), evn.GetY()))
                 {
-                    if (!coin.IsSquareBlack())
-                    {
-                        coin.SetX(lastPosition.X * 180 + 90);
-                        coin.SetY(lastPosition.Y * 180 + 90);
-                        Invalidate();
-                    }
+                    Refresh(c);
+                    break;
                 }
-                else if (Coin.IsSquareBlack((int)evn.GetX(), (int)evn.GetY()))
-                {
-                    coin.SetX(evn.GetX());
-                    coin.SetY(evn.GetY());
-                    Invalidate();
-                } 
-
-                var p = coin.GetCoinSquare();
-                coin.SetX(p.X * 180 + 90);
-                coin.SetY(p.Y * 180 + 90);
-                Invalidate();
-
-                dragging = false;
             }
             return true;
         }
+
+        public void Refresh(Coin coin)
+        {
+            lock (coins)
+            {
+                coins.Remove(coin);
+            }
+            Invalidate();
+        }
+
     }
 }
