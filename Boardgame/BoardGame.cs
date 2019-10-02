@@ -11,7 +11,6 @@ namespace Boardgame
     {
         private List<Coin> coins = new List<Coin>();
         private Square[,] squares;
-        private Context context;
         private Timer timer;
         private int score;
 
@@ -28,7 +27,6 @@ namespace Boardgame
 
         public BoardGame(Context context): base(context)
         {
-            this.context = context;
             squares = new Square[6, 6];
             score = 0;
             Lives = 3;
@@ -160,7 +158,7 @@ namespace Boardgame
 
                 if (gameState == GameState.GameOver)
                 {
-                    Timer t = new Timer(3000);
+                    Timer t = new Timer(1500);
                     t.Elapsed += OnFreezeEnd;
                     t.AutoReset = false;
                     t.Enabled = true;
